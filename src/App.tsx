@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import MentorOnboarding from './components/onboarding/MentorOnboarding';
+import LearnerOnboarding from './pages/LearnerOnboarding';
 import RatingBreakdown from './components/reviews/RatingBreakdown';
 import ReviewForm from './components/reviews/ReviewForm';
 import ReviewList from './components/reviews/ReviewList';
@@ -11,7 +12,7 @@ import AreaChart from './components/charts/AreaChart';
 import MetricCard from './components/charts/MetricCard';
 
 function App() {
-  const [view, setView] = useState<'onboarding' | 'reviews' | 'analytics'>('onboarding');
+  const [view, setView] = useState<'onboarding' | 'learner' | 'reviews' | 'analytics'>('onboarding');
   const [showForm, setShowForm] = useState(false);
   
   const { 
@@ -46,6 +47,14 @@ function App() {
               Mentor Onboarding
             </button>
             <button
+              onClick={() => setView('learner')}
+              className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+                view === 'learner' ? 'bg-white shadow-sm text-stellar' : 'text-gray-400 hover:text-gray-600'
+              }`}
+            >
+              Learner Onboarding
+            </button>
+            <button
               onClick={() => setView('analytics')}
               className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
                 view === 'analytics' ? 'bg-white shadow-sm text-stellar' : 'text-gray-400 hover:text-gray-600'
@@ -69,6 +78,8 @@ function App() {
       <main className="max-w-7xl mx-auto px-4 pt-10">
         {view === 'onboarding' ? (
           <MentorOnboarding />
+        ) : view === 'learner' ? (
+          <LearnerOnboarding />
         ) : view === 'analytics' ? (
           <AnalyticsDashboard />
         ) : (
