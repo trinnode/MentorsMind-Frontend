@@ -2,7 +2,13 @@ import { lazy, useEffect, useState } from 'react';
 import SkipNavigation from './components/a11y/SkipNavigation';
 import LiveRegion from './components/a11y/LiveRegion';
 import AccessibilityPanel from './components/a11y/AccessibilityPanel';
-import LazyComponent from './components/performance/LazyComponent';
+import MentorOnboarding from './components/onboarding/MentorOnboarding';
+import LearnerOnboarding from './pages/LearnerOnboarding';
+import MentorWallet from './pages/MentorWallet';
+import LearningGoals from './pages/LearningGoals';
+import RatingBreakdown from './components/reviews/RatingBreakdown';
+import ReviewForm from './components/reviews/ReviewForm';
+import ReviewList from './components/reviews/ReviewList';
 import { useReviews } from './hooks/useReviews';
 import { usePerformance } from './hooks/usePerformance';
 import { preloadCriticalResources } from './utils/performance.utils';
@@ -119,7 +125,7 @@ function AnalyticsDashboard() {
 }
 
 function App() {
-  const [view, setView] = useState<AppView>('search');
+  const [view, setView] = useState<'onboarding' | 'learner' | 'wallet' | 'goals' | 'reviews' | 'analytics'>('onboarding');
   const [showForm, setShowForm] = useState(false);
   const [a11yOpen, setA11yOpen] = useState(false);
   const [announcement, setAnnouncement] = useState('');
@@ -171,6 +177,56 @@ function App() {
             <span className="text-xl font-bold tracking-tight">
               MentorMinds <span className="text-stellar">Stellar</span>
             </span>
+              Mentor Onboarding
+            </button>
+            <button
+              onClick={() => setView('learner')}
+              className={`px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${
+                view === 'learner' ? 'bg-white shadow-sm text-stellar' : 'text-gray-400 hover:text-gray-600'
+              }`}
+            >
+              Learner Onboarding
+            </button>
+            <button
+              onClick={() => setView('goals')}
+              className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+                view === 'goals' ? 'bg-white shadow-sm text-stellar' : 'text-gray-400 hover:text-gray-600'
+              }`}
+            >
+              Goals
+            </button>
+            <button
+              onClick={() => setView('wallet')}
+              className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+                view === 'wallet' ? 'bg-white shadow-sm text-stellar' : 'text-gray-400 hover:text-gray-600'
+              }`}
+            >
+              Wallet
+            </button>
+            <button
+              onClick={() => setView('analytics')}
+              className={`px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${
+                view === 'analytics' ? 'bg-white shadow-sm text-stellar' : 'text-gray-400 hover:text-gray-600'
+              }`}
+            >
+              Analytics
+            </button>
+            <button
+              onClick={() => setView('reviews')}
+              className={`px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${
+                view === 'reviews' ? 'bg-white shadow-sm text-stellar' : 'text-gray-400 hover:text-gray-600'
+              }`}
+            >
+              Ratings & Reviews
+            </button>
+            <button
+              onClick={() => setView('search')}
+              className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+                view === 'search' ? 'bg-white shadow-sm text-stellar' : 'text-gray-400 hover:text-gray-600'
+              }`}
+            >
+              Search & Discovery
+            </button>
           </div>
 
           <div className="hidden items-center gap-2 rounded-2xl bg-gray-50 p-1 md:flex">
@@ -216,14 +272,25 @@ function App() {
         </div>
       </nav>
 
-      <main id="main-content" tabIndex={-1} className="mx-auto max-w-7xl px-4 pt-10 outline-none">
-        {view === 'search' && <LazyComponent><MentorSearch /></LazyComponent>}
-        {view === 'learner' && <LazyComponent><LearnerOnboarding /></LazyComponent>}
-        {view === 'onboarding' && <LazyComponent><MentorOnboarding /></LazyComponent>}
-        {view === 'wallet' && <LazyComponent><MentorWallet /></LazyComponent>}
-        {view === 'analytics' && <LazyComponent><AnalyticsDashboard /></LazyComponent>}
-        {view === 'reviews' && (
-          <LazyComponent>
+      {/* Main content area */}
+      <main id="main-content" tabIndex={-1} className="max-w-7xl mx-auto px-4 pt-10 outline-none">
+        {view === 'onboarding' ? (
+          <MentorOnboarding />
+        ) : view === 'learner' ? (
+          <LearnerOnboarding />
+        ) : view === 'wallet' ? (
+          <MentorWallet />
+        ) : view === 'goals' ? (
+          <LearningGoals />
+        ) : view === 'dashboard' ? (
+          <MentorDashboard />
+        ) : view === 'search' ? (
+          <MentorSearch />
+        ) : view === 'analytics' ? (
+          <AnalyticsDashboard />
+        ) : view === 'search' ? (
+          <SearchPage />
+        ) : (
           <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="flex justify-between items-end">
               <div>
