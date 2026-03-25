@@ -1,5 +1,5 @@
 import { AxiosError } from "axios";
-import { showErrorToast } from "../utils/toast";
+import { showErrorToast } from "../utils/toast.utils";
 
 export const handleApiError = (error: unknown) => {
   if ((error as AxiosError).isAxiosError) {
