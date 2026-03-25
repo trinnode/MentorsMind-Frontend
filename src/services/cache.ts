@@ -16,3 +16,7 @@ export const getCached = <T>(key: string): T | null => {
 
   return entry.data as T;
 };
+
+export const setCache = <T>(key: string, data: T) => {
+  cache.set(key, { data, timestamp: Date.now() });
+};
