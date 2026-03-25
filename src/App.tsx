@@ -7,6 +7,7 @@ import LearnerOnboarding from './pages/LearnerOnboarding';
 import MentorWallet from './pages/MentorWallet';
 import LearningGoals from './pages/LearningGoals';
 import MentorProfileSetup from './pages/MentorProfileSetup';
+import Settings from './pages/Settings';
 import RatingBreakdown from './components/reviews/RatingBreakdown';
 import ReviewForm from './components/reviews/ReviewForm';
 import ReviewList from './components/reviews/ReviewList';
@@ -38,7 +39,7 @@ const BarChart = lazy(loadBarChart);
 const PieChart = lazy(loadPieChart);
 const AreaChart = lazy(loadAreaChart);
 
-type AppView = 'onboarding' | 'learner' | 'wallet' | 'search' | 'reviews' | 'analytics' | 'profile';
+type AppView = 'onboarding' | 'learner' | 'wallet' | 'search' | 'reviews' | 'analytics' | 'profile' | 'settings';
 
 const earningsData = [
   { label: 'Jan', earnings: 1200, sessions: 8 },
@@ -162,6 +163,7 @@ function App() {
     wallet: loadMentorWallet,
     analytics: loadAreaChart,
     reviews: loadReviewList,
+    settings: () => Promise.resolve(),
   };
 
   return (
@@ -248,6 +250,7 @@ function App() {
               { id: 'wallet', label: 'Wallet' },
               { id: 'analytics', label: 'Analytics' },
               { id: 'reviews', label: 'Reviews' },
+              { id: 'settings', label: 'Settings' },
             ].map((item) => (
               <button
                 key={item.id}
@@ -285,7 +288,9 @@ function App() {
 
       {/* Main content area */}
       <main id="main-content" tabIndex={-1} className="max-w-7xl mx-auto px-4 pt-10 outline-none">
-        {view === 'onboarding' ? (
+        {view === 'settings' ? (
+          <Settings />
+        ) : view === 'onboarding' ? (
           <MentorOnboarding />
         ) : view === 'learner' ? (
           <LearnerOnboarding />
