@@ -105,7 +105,7 @@ const MentorDashboard: React.FC = () => {
         {/* Main Content Area */}
         <div className="lg:col-span-3 space-y-8">
 <div className="flex items-center gap-4 border-b border-gray-100 pb-2 overflow-x-auto no-scrollbar">
-            {(['overview', 'sessions', 'earnings', 'manage'] as const).map((tab) => (
+{(['overview', 'analytics', 'sessions', 'earnings', 'manage'] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => {
@@ -113,10 +113,16 @@ const MentorDashboard: React.FC = () => {
                     window.location.href = '/mentor/sessions';
                     return;
                   }
+                  if (tab === 'analytics') {
+                    window.location.href = '/mentor/analytics';
+                    return;
+                  }
                   setActiveTab(tab);
                 }}
                 className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${
-                  activeTab === tab || (tab === 'manage' && window.location.pathname.includes('/mentor/sessions')) 
+                  activeTab === tab || 
+                  (tab === 'manage' && window.location.pathname.includes('/mentor/sessions')) ||
+                  (tab === 'analytics' && window.location.pathname.includes('/mentor/analytics'))
                     ? 'bg-stellar text-white shadow-lg shadow-stellar/20' 
                     : 'text-gray-400 hover:text-gray-600'
                 }`}
