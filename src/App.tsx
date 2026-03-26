@@ -1,16 +1,11 @@
-import { lazy, useEffect, useState } from 'react';
+import React, { lazy, useEffect, useState, Suspense } from 'react';
+import { useOnlineStatus } from './hooks/useOnlineStatus';
+import OfflineBanner from './components/ui/OfflineBanner';
+import NetworkErrorToast from './components/ui/NetworkErrorToast';
+
 import SkipNavigation from './components/a11y/SkipNavigation';
 import LiveRegion from './components/a11y/LiveRegion';
 import AccessibilityPanel from './components/a11y/AccessibilityPanel';
-import MentorOnboarding from './components/onboarding/MentorOnboarding';
-import LearnerOnboarding from './pages/LearnerOnboarding';
-import MentorWallet from './pages/MentorWallet';
-import LearningGoals from './pages/LearningGoals';
-import MentorProfileSetup from './pages/MentorProfileSetup';
-import Settings from './pages/Settings';
-import RatingBreakdown from './components/reviews/RatingBreakdown';
-import ReviewForm from './components/reviews/ReviewForm';
-import ReviewList from './components/reviews/ReviewList';
 import { useReviews } from './hooks/useReviews';
 import { usePerformance } from './hooks/usePerformance';
 import { preloadCriticalResources } from './utils/performance.utils';
@@ -19,6 +14,10 @@ const loadMentorOnboarding = () => import('./components/onboarding/MentorOnboard
 const loadLearnerOnboarding = () => import('./pages/LearnerOnboarding');
 const loadMentorWallet = () => import('./pages/MentorWallet');
 const loadMentorSearch = () => import('./pages/MentorSearch');
+const loadMentorSessions = () => import('./pages/MentorSessions');
+const loadSettings = () => import('./pages/Settings');
+const loadMentorProfileSetup = () => import('./pages/MentorProfileSetup');
+const loadLearningGoals = () => import('./pages/LearningGoals');
 const loadRatingBreakdown = () => import('./components/reviews/RatingBreakdown');
 const loadReviewForm = () => import('./components/reviews/ReviewForm');
 const loadReviewList = () => import('./components/reviews/ReviewList');
@@ -31,6 +30,11 @@ const MentorOnboarding = lazy(loadMentorOnboarding);
 const LearnerOnboarding = lazy(loadLearnerOnboarding);
 const MentorWallet = lazy(loadMentorWallet);
 const MentorSearch = lazy(loadMentorSearch);
+const MentorSessions = lazy(loadMentorSessions);
+const Settings = lazy(loadSettings);
+const MentorProfileSetup = lazy(() => loadMentorProfileSetup().then(m => ({ default: m.MentorProfileSetup })));
+const LearningGoals = lazy(loadLearningGoals);
+const MentorDashboard = lazy(() => import('./pages/MentorDashboard'));
 const RatingBreakdown = lazy(loadRatingBreakdown);
 const ReviewForm = lazy(loadReviewForm);
 const ReviewList = lazy(loadReviewList);
@@ -39,7 +43,7 @@ const BarChart = lazy(loadBarChart);
 const PieChart = lazy(loadPieChart);
 const AreaChart = lazy(loadAreaChart);
 
-type AppView = 'onboarding' | 'learner' | 'wallet' | 'search' | 'reviews' | 'analytics' | 'profile' | 'settings';
+type AppView = 'onboarding' | 'learner' | 'wallet' | 'search' | 'reviews' | 'analytics' | 'profile' | 'sessions' | 'settings' | 'goals' | 'dashboard';
 
 const earningsData = [
   { label: 'Jan', earnings: 1200, sessions: 8 },
@@ -125,9 +129,9 @@ function AnalyticsDashboard() {
     </div>
   );
 }
-
 function App() {
-  const [view, setView] = useState<'onboarding' | 'learner' | 'wallet' | 'goals' | 'reviews' | 'analytics' | 'profile'>('onboarding');
+  const isOnline = useOnlineStatus();
+  const [view, setView] = useState<AppView>('onboarding');
   const [showForm, setShowForm] = useState(false);
   const [a11yOpen, setA11yOpen] = useState(false);
   const [announcement, setAnnouncement] = useState('');
@@ -155,20 +159,44 @@ function App() {
     preloadCriticalResources();
   }, []);
 
+  const [networkError, setNetworkError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleNetworkError = (e: any) => {
+      setNetworkError(e.detail?.message || 'A network error occurred.');
+    };
+    window.addEventListener('api-network-error', handleNetworkError);
+    return () => window.removeEventListener('api-network-error', handleNetworkError);
+  }, []);
+
   const preloaders: Record<AppView, () => Promise<unknown>> = {
+
     search: loadMentorSearch,
     learner: loadLearnerOnboarding,
     onboarding: loadMentorOnboarding,
-    profile: loadMentorOnboarding,
+    profile: loadMentorProfileSetup,
     wallet: loadMentorWallet,
     analytics: loadAreaChart,
     reviews: loadReviewList,
-    settings: () => Promise.resolve(),
+    sessions: loadMentorSessions,
+    settings: loadSettings,
+    goals: loadLearningGoals,
+    dashboard: () => Promise.resolve(), // Assuming static or handled elsewhere
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans text-gray-900 pb-20">
+    <div className={`min-h-screen bg-gray-50 font-sans text-gray-900 pb-20 ${!isOnline ? 'pt-10' : ''}`}>
+      <OfflineBanner />
+      {networkError && (
+        <NetworkErrorToast 
+          message={networkError} 
+          onRetry={() => window.dispatchEvent(new Event('online'))} 
+          onClose={() => setNetworkError(null)} 
+        />
+      )}
       <SkipNavigation />
+
+
       <LiveRegion message={announcement} />
       <AccessibilityPanel isOpen={a11yOpen} onClose={() => setA11yOpen(false)} />
 
@@ -181,15 +209,16 @@ function App() {
             <span className="text-xl font-bold tracking-tight">
               MentorMinds <span className="text-stellar">Stellar</span>
             </span>
-              Mentor Onboarding
-            </button>
+          </div>
+
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar md:hidden py-2 px-1">
             <button
-              onClick={() => setView('learner')}
+              onClick={() => setView('onboarding')}
               className={`px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${
-                view === 'learner' ? 'bg-white shadow-sm text-stellar' : 'text-gray-400 hover:text-gray-600'
+                view === 'onboarding' ? 'bg-white shadow-sm text-stellar' : 'text-gray-400 hover:text-gray-600'
               }`}
             >
-              Learner Onboarding
+              Mentor Onboarding
             </button>
             <button
               onClick={() => setView('goals')}
@@ -232,12 +261,28 @@ function App() {
               Profile Setup
             </button>
             <button
-              onClick={() => setView('search')}
+              onClick={() => handleViewChange('search', 'Search & Discovery')}
               className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
                 view === 'search' ? 'bg-white shadow-sm text-stellar' : 'text-gray-400 hover:text-gray-600'
               }`}
             >
               Search & Discovery
+            </button>
+            <button
+              onClick={() => handleViewChange('sessions', 'Manage Sessions')}
+              className={`px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${
+                view === 'sessions' ? 'bg-white shadow-sm text-stellar' : 'text-gray-400 hover:text-gray-600'
+              }`}
+            >
+              Manage Sessions
+            </button>
+            <button
+              onClick={() => handleViewChange('settings', 'Settings')}
+              className={`px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${
+                view === 'settings' ? 'bg-white shadow-sm text-stellar' : 'text-gray-400 hover:text-gray-600'
+              }`}
+            >
+              Settings
             </button>
           </div>
 
@@ -246,12 +291,13 @@ function App() {
               { id: 'search', label: 'Search & Booking' },
               { id: 'learner', label: 'Learner Onboarding' },
               { id: 'onboarding', label: 'Mentor Onboarding' },
+              { id: 'sessions', label: 'Manage Sessions' },
               { id: 'profile', label: 'Profile Setup' },
               { id: 'wallet', label: 'Wallet' },
+              { id: 'settings', label: 'Settings' },
               { id: 'analytics', label: 'Analytics' },
               { id: 'reviews', label: 'Reviews' },
-              { id: 'settings', label: 'Settings' },
-            ].map((item) => (
+            ].map((item: { id: string; label: string }) => (
               <button
                 key={item.id}
                 type="button"
@@ -288,40 +334,60 @@ function App() {
 
       {/* Main content area */}
       <main id="main-content" tabIndex={-1} className="max-w-7xl mx-auto px-4 pt-10 outline-none">
-        {view === 'settings' ? (
-          <Settings />
-        ) : view === 'onboarding' ? (
-          <MentorOnboarding />
-        ) : view === 'learner' ? (
-          <LearnerOnboarding />
-        ) : view === 'wallet' ? (
-          <MentorWallet />
-        ) : view === 'goals' ? (
-          <LearningGoals />
-        ) : view === 'profile' ? (
-          <MentorProfileSetup />
-        ) : view === 'dashboard' ? (
-          <MentorDashboard />
-        ) : view === 'search' ? (
-          <MentorSearch />
-        ) : view === 'analytics' ? (
-          <AnalyticsDashboard />
-        ) : (
+        <Suspense fallback={<div className="flex h-64 items-center justify-center">Loading...</div>}>
+          {view === 'settings' ? (
+            <Settings />
+          ) : view === 'onboarding' ? (
+            <MentorOnboarding />
+          ) : view === 'learner' ? (
+            <LearnerOnboarding />
+          ) : view === 'wallet' ? (
+            <MentorWallet isOnline={isOnline} />
+          ) : view === 'goals' ? (
+            <LearningGoals />
+          ) : view === 'sessions' ? (
+            <MentorSessions isOnline={isOnline} />
+          ) : view === 'profile' ? (
+            <MentorProfileSetup />
+          ) : view === 'search' ? (
+            <MentorSearch isOnline={isOnline} />
+          ) : view === 'analytics' ? (
+            <AnalyticsDashboard />
+          ) : view === 'dashboard' ? (
+            <MentorDashboard />
+          ) : (
           <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="flex justify-between items-end">
               <div>
-                <h2 className="text-3xl font-bold mb-2">Mentor Feedback</h2>
+                <h2 className="text-3xl font-bold mb-2">
+                  Mentor Feedback
+                  {!isOnline && (
+                    <span className="ml-3 inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800">
+                      <svg className="mr-1.5 h-2 w-2 text-amber-400" fill="currentColor" viewBox="0 0 8 8">
+                        <circle cx="4" cy="4" r="3" />
+                      </svg>
+                      Offline Cache
+                    </span>
+                  )}
+                </h2>
                 <p className="text-gray-500">See what the community is saying about your sessions.</p>
+
               </div>
               <button
                 type="button"
                 onClick={() => setShowForm(!showForm)}
+                disabled={!isOnline}
                 aria-expanded={showForm}
                 aria-controls="review-form"
-                className="rounded-xl bg-stellar px-6 py-2.5 font-bold text-white shadow-lg shadow-stellar/20 transition-all hover:bg-stellar-dark"
+                className={`rounded-xl px-6 py-2.5 font-bold shadow-lg transition-all ${
+                  !isOnline 
+                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none' 
+                    : 'bg-stellar text-white shadow-stellar/20 hover:bg-stellar-dark'
+                }`}
               >
                 {showForm ? 'Cancel Review' : 'Write a Review'}
               </button>
+
             </div>
 
             {showForm && (
@@ -353,14 +419,14 @@ function App() {
               />
             </div>
           </div>
-          </LazyComponent>
         )}
+        </Suspense>
       </main>
 
       <aside className="fixed bottom-16 left-4 z-40 hidden w-72 rounded-[1.5rem] border border-gray-100 bg-white/95 p-4 shadow-xl backdrop-blur md:block">
         <div className="text-xs font-bold uppercase tracking-[0.18em] text-stellar">Performance Monitor</div>
         <div className="mt-3 grid grid-cols-3 gap-2">
-          {dashboard.map((item) => (
+          {dashboard.map((item: { label: string; value: number | string | null; unit?: string }) => (
             <div key={item.label} className="rounded-2xl bg-gray-50 p-3 text-center">
               <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-gray-400">{item.label}</div>
               <div className="mt-1 text-sm font-black text-gray-900">
