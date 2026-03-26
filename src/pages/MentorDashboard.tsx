@@ -1,10 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useMentorDashboard } from '../hooks/useMentorDashboard';
 import UpcomingSessions from '../components/mentor/UpcomingSessions';
 import EarningsOverview from '../components/mentor/EarningsOverview';
 import PerformanceMetrics from '../components/mentor/PerformanceMetrics';
 import RecentReviews from '../components/mentor/RecentReviews';
 import ActivityFeed from '../components/mentor/ActivityFeed';
+import { useSessionCountdown } from '../hooks/useSessionCountdown';
+
+const POLL_INTERVAL_MS = 30_000;
+
+// Inner component so hooks can use session data
+const MentorDashboardInner: React.FC<{ nextSessionTime?: string }> = ({ nextSessionTime }) => {
+  const countdown = useSessionCountdown(nextSessionTime ?? new Date(0).toISOString());
+  return countdown.isStartingSoon && !countdown.isStarted && nextSessionTime ? (
+    <div className="flex items-center gap-3 px-5 py-3 mb-6 bg-amber-50 border border-amber-200 rounded-2xl text-amber-700 text-sm font-bold animate-in slide-in-from-top-2 duration-300">
+      <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse flex-shrink-0" />
+      Session starting soon — your next session begins in under 15 minutes.
+    </div>
+  ) : null;
+};
 
 const MentorDashboard: React.FC = () => {
   const {
@@ -17,6 +31,16 @@ const MentorDashboard: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<'overview' | 'sessions' | 'earnings'>('overview');
   const [isAvailable, setIsAvailable] = useState(true);
+  const [lastPolled, setLastPolled] = useState<Date>(new Date());
+
+  // 30s polling indicator
+  useEffect(() => {
+    const interval = setInterval(() => setLastPolled(new Date()), POLL_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, []);
+
+  const nextSession = data.upcomingSessions?.[0];
+  const nextSessionTime = nextSession?.startTime;
 
   const handleReschedule = (id: string) => {
     // Quick action: reschedule to 48 hours from now
@@ -27,6 +51,15 @@ const MentorDashboard: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 animate-in fade-in duration-700">
+      {/* Starting soon banner */}
+      <MentorDashboardInner nextSessionTime={nextSessionTime} />
+
+      {/* Polling indicator */}
+      <div className="flex items-center gap-1.5 text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-4">
+        <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+        Live · Updated {lastPolled.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+      </div>
+
       {/* Welcome Header */}
       <div className="flex flex-wrap justify-between items-center gap-6 mb-10">
         <div>
