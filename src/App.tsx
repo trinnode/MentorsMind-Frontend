@@ -19,6 +19,7 @@ const loadMentorSessions = () => import('./pages/MentorSessions');
 const loadSettings = () => import('./pages/Settings');
 const loadMentorProfileSetup = () => import('./pages/MentorProfileSetup');
 const loadLearningGoals = () => import('./pages/LearningGoals');
+const loadGovernance = () => import('./pages/Governance');
 const loadRatingBreakdown = () => import('./components/reviews/RatingBreakdown');
 const loadReviewForm = () => import('./components/reviews/ReviewForm');
 const loadReviewList = () => import('./components/reviews/ReviewList');
@@ -38,6 +39,7 @@ const MentorProfileSetup = lazy(() =>
 );
 const LearningGoals = lazy(loadLearningGoals);
 const MentorDashboard = lazy(() => import("./pages/MentorDashboard"));
+const Governance = lazy(loadGovernance);
 const RatingBreakdown = lazy(loadRatingBreakdown);
 const ReviewForm = lazy(loadReviewForm);
 const ReviewList = lazy(loadReviewList);
@@ -51,6 +53,7 @@ type AppView =
   | 'learner'
   | 'wallet'
   | 'search'
+  | 'governance'
   | 'reviews'
   | 'analytics'
   | 'profile'
@@ -180,6 +183,7 @@ function App() {
     search: loadMentorSearch,
     learner: loadLearnerOnboarding,
     onboarding: loadMentorOnboarding,
+    governance: loadGovernance,
     profile: loadMentorOnboarding,
     wallet: loadMentorWallet,
     analytics: loadAreaChart,
@@ -230,6 +234,7 @@ function App() {
                 { id: 'search', label: 'Search' },
                 { id: 'learner', label: 'Learner' },
                 { id: 'onboarding', label: 'Mentor' },
+                { id: 'governance', label: 'Governance' },
                 { id: 'profile', label: 'Profile' },
                 { id: 'wallet', label: 'Wallet' },
                 { id: 'sessions', label: 'Sessions' },
@@ -257,6 +262,7 @@ function App() {
                 { id: 'search', label: 'Search & Discovery' },
                 { id: 'learner', label: 'Learner Onboarding' },
                 { id: 'onboarding', label: 'Mentor Onboarding' },
+                { id: 'governance', label: 'Governance' },
                 { id: 'goals', label: 'Goals' },
                 { id: 'sessions', label: 'Manage Sessions' },
                 { id: 'profile', label: 'Profile Setup' },
@@ -313,6 +319,8 @@ function App() {
               <MentorOnboarding />
             ) : view === 'learner' ? (
               <LearnerOnboarding />
+            ) : view === 'governance' ? (
+              <Governance />
             ) : view === 'wallet' ? (
               <MentorWallet isOnline={isOnline} />
             ) : view === 'goals' ? (
