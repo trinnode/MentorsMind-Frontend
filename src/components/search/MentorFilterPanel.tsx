@@ -1,4 +1,5 @@
 import React from 'react';
+import { SearchFilters } from '../../types';
 
 interface MentorFilterPanelProps {
   filters: {
@@ -9,7 +10,10 @@ interface MentorFilterPanelProps {
     availabilityDays: string[];
     languages: string[];
   };
-  onFilterChange: <K extends keyof typeof filters>(key: K, value: (typeof filters)[K]) => void;
+onFilterChange: <K extends keyof SearchFilters>(
+  key: K,
+  value: SearchFilters[K]
+) => void;
   onClearFilters: () => void;
 }
 
