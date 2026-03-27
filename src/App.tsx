@@ -20,6 +20,7 @@ const loadSettings = () => import('./pages/Settings');
 const loadMentorProfileSetup = () => import('./pages/MentorProfileSetup');
 const loadLearningGoals = () => import('./pages/LearningGoals');
 const loadGovernance = () => import('./pages/Governance');
+const loadProposalDetail = () => import('./pages/ProposalDetail');
 const loadRatingBreakdown = () => import('./components/reviews/RatingBreakdown');
 const loadReviewForm = () => import('./components/reviews/ReviewForm');
 const loadReviewList = () => import('./components/reviews/ReviewList');
@@ -36,6 +37,8 @@ const MentorWallet = lazy(loadMentorWallet);
 const MentorSearch = lazy(loadMentorSearch);
 const MentorSessions = lazy(loadMentorSessions);
 const Settings = lazy(loadSettings);
+const Governance = lazy(loadGovernance);
+const ProposalDetail = lazy(loadProposalDetail);
 const MentorProfileSetup = lazy(() => loadMentorProfileSetup().then(m => ({ default: m.MentorProfileSetup })));
 const LearningGoals = lazy(loadLearningGoals);
 const MentorDashboard = lazy(() => import('./pages/MentorDashboard'));
@@ -287,6 +290,22 @@ function App() {
             element={
               <Suspense fallback={fallback}>
                 <MentorPublicProfile />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/governance/proposals/:id"
+            element={
+              <Suspense fallback={fallback}>
+                <ProposalDetail />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/governance"
+            element={
+              <Suspense fallback={fallback}>
+                <Governance />
               </Suspense>
             }
           />
