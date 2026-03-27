@@ -16,7 +16,7 @@ export interface PaymentBreakdown {
   assetCode: StellarAssetCode;
 }
 
-export type PaymentStep = 'method' | 'review' | 'processing' | 'success' | 'error';
+export type PaymentStep = 'connect' | 'method' | 'review' | 'processing' | 'success' | 'error';
 
 export interface PaymentState {
   step: PaymentStep;
