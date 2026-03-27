@@ -2,6 +2,7 @@ export const ROUTES = {
   HOME: '/',
   DASHBOARD: '/dashboard',
   MENTORS: '/mentors',
+  MENTOR_PROFILE: '/mentors/:id',
   SESSIONS: '/sessions',
   HISTORY: '/history',
   PAYMENTS: '/payments',
