@@ -28,8 +28,10 @@ const loadBarChart = () => import('./components/charts/BarChart');
 const loadPieChart = () => import('./components/charts/PieChart');
 const loadAreaChart = () => import('./components/charts/AreaChart');
 const loadMentorPublicProfile = () => import('./pages/MentorPublicProfile');
+const loadLearnerProfile = () => import('./pages/LearnerProfile');
 
 const MentorPublicProfile = lazy(loadMentorPublicProfile);
+const LearnerProfile = lazy(() => loadLearnerProfile().then(m => ({ default: m.LearnerProfilePage })));
 const MentorOnboarding = lazy(loadMentorOnboarding);
 const LearnerOnboarding = lazy(loadLearnerOnboarding);
 const MentorWallet = lazy(loadMentorWallet);
@@ -47,7 +49,7 @@ const BarChart = lazy(loadBarChart);
 const PieChart = lazy(loadPieChart);
 const AreaChart = lazy(loadAreaChart);
 
-type AppView = 'onboarding' | 'learner' | 'wallet' | 'search' | 'reviews' | 'analytics' | 'profile' | 'sessions' | 'settings' | 'goals' | 'dashboard';
+type AppView = 'onboarding' | 'learner' | 'wallet' | 'search' | 'reviews' | 'analytics' | 'profile' | 'sessions' | 'settings' | 'goals' | 'dashboard' | 'learner-profile';
 
 const earningsData = [
   { label: 'Jan', earnings: 1200, sessions: 8 },
@@ -248,6 +250,7 @@ function App() {
             { id: 'settings', label: 'Settings' },
             { id: 'analytics', label: 'Analytics' },
             { id: 'reviews', label: 'Reviews' },
+            { id: 'learner-profile', label: 'Learner Profile' },
           ].map((item: { id: string; label: string }) => (
             <button
               key={item.id}
@@ -315,6 +318,8 @@ function App() {
                     <AnalyticsDashboard />
                   ) : view === 'dashboard' ? (
                     <MentorDashboard />
+                  ) : view === 'learner-profile' ? (
+                    <LearnerProfile />
                   ) : (
                     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
                       <div className="flex justify-between items-end">
