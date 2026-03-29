@@ -132,14 +132,13 @@ const SessionRoom: React.FC<SessionRoomProps> = ({
 
   const remoteVideoOff = !isScreenSharing && (isCameraOff || isAudioOnly);
 
-  if (error) {
+  // Pre-join screen
+  if (!isConnected) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
-        <div className="bg-white rounded-3xl p-8 max-w-md w-full text-center">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
-            <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
+        <div className="bg-white rounded-2xl p-8 max-w-sm w-full text-center space-y-4">
+          <div className="w-14 h-14 mx-auto rounded-full bg-blue-100 flex items-center justify-center">
+            <Video className="h-7 w-7 text-blue-600" />
           </div>
           <h2 className="text-xl font-bold text-gray-900 mb-2">Connection Error</h2>
           <p className="text-gray-500 mb-6">{error}</p>
@@ -153,30 +152,50 @@ const SessionRoom: React.FC<SessionRoomProps> = ({
               Retry
             </button>
             <button
-              onClick={disconnect}
-              className="px-6 py-3 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition-all"
+              onClick={join}
+              className="w-full rounded-xl bg-blue-600 py-3 font-semibold text-white hover:bg-blue-700 transition-colors"
             >
-              Leave
+              Join Session
             </button>
-          </div>
+          ) : (
+            <p className="text-sm text-gray-400">
+              Join button available 10 minutes before the session starts.
+            </p>
+          )}
         </div>
       </div>
     );
   }
 
-  if (isConnecting) {
-    return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
-        <div className="bg-white rounded-3xl p-8 max-w-md w-full text-center">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-stellar/10 flex items-center justify-center">
-            <div className="w-8 h-8 border-4 border-stellar border-t-transparent rounded-full animate-spin" />
+  return (
+    <div className="flex h-screen bg-gray-900 overflow-hidden">
+      {/* Video area — 70% */}
+      <div className="flex flex-col" style={{ width: '70%' }}>
+        {/* Header bar */}
+        <div className="flex items-center justify-between px-4 py-2 bg-gray-900/80">
+          <div>
+            <p className="text-white font-semibold text-sm">{session.topic}</p>
+            <p className="text-white/50 text-xs">with {session.mentorName}</p>
+          </div>
+          {/* Timer */}
+          <div className="flex flex-col items-end gap-1">
+            <div className="flex items-center gap-2 bg-black/40 rounded-lg px-3 py-1">
+              <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+              <span className="font-mono text-white font-bold text-sm">{fmt(elapsed)}</span>
+              <span className="text-white/40 text-xs">LIVE</span>
+            </div>
+            {/* Duration limit bar */}
+            <div className="w-32 h-1 rounded-full bg-white/10 overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all ${nearLimit ? 'bg-red-500' : 'bg-blue-400'}`}
+                style={{ width: `${limitPct}%` }}
+              />
+            </div>
+            {nearLimit && <span className="text-xs text-red-400">Session limit approaching</span>}
           </div>
           <h2 className="text-xl font-bold text-gray-900 mb-2">Connecting to session...</h2>
           <p className="text-gray-500">Please wait while we connect you to the WebRTC session.</p>
         </div>
-      </div>
-    );
-  }
 
   if (!isConnected) {
     return (
@@ -217,30 +236,36 @@ const SessionRoom: React.FC<SessionRoomProps> = ({
             }}
             className="w-full px-6 py-3 bg-stellar text-white font-bold rounded-xl hover:bg-stellar-dark transition-all"
           >
-            Join Session
+            {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
           </button>
         </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-900 flex flex-col">
       <div className="flex flex-wrap items-center justify-between gap-4 bg-gray-900/50 p-4">
         <div className="flex items-center gap-4">
           <button
-            onClick={disconnect}
-            className="p-2 hover:bg-white/10 rounded-lg transition-colors text-white"
-            aria-label="Leave session"
+            onClick={() => setIsMuted(v => !v)}
+            aria-label={isMuted ? 'Unmute (M)' : 'Mute (M)'}
+            className={`p-3 rounded-xl transition-colors ${isMuted ? 'bg-red-500 text-white' : 'bg-white/10 text-white hover:bg-white/20'}`}
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
+            {isMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
           </button>
-          <div>
-            <h1 className="text-white font-bold">{sessionTopic}</h1>
-            <p className="text-white/60 text-sm">with {mentorName}</p>
-          </div>
+          <button
+            onClick={() => setIsVideoOff(v => !v)}
+            aria-label={isVideoOff ? 'Turn on video (V)' : 'Turn off video (V)'}
+            className={`p-3 rounded-xl transition-colors ${isVideoOff ? 'bg-red-500 text-white' : 'bg-white/10 text-white hover:bg-white/20'}`}
+          >
+            {isVideoOff ? <VideoOff className="h-5 w-5" /> : <Video className="h-5 w-5" />}
+          </button>
+          <div className="w-px h-8 bg-white/20" />
+          <button
+            onClick={() => setShowEndModal(true)}
+            className="flex items-center gap-2 rounded-xl bg-red-500 px-5 py-3 text-sm font-semibold text-white hover:bg-red-600 transition-colors"
+          >
+            <PhoneOff className="h-4 w-4" />
+            End Session
+          </button>
         </div>
 
         <div className="flex flex-wrap items-center justify-end gap-3">
