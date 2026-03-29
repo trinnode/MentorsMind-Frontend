@@ -1,55 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { usePayment } from '../../hooks/usePayment';
 import type { PaymentDetails } from '../../types/payment.types';
 import PaymentMethod from './PaymentMethod';
 import PaymentBreakdown from './PaymentBreakdown';
 import PaymentReceipt from './PaymentReceipt';
 import TransactionTracker from './TransactionTracker';
+import AMLNotice from '../compliance/AMLNotice';
 import { useStellarTransaction } from '../../hooks/useStellarTransaction';
-
-// Live confirmation steps shown during processing
-const CONFIRMATION_STEPS = [
-  'Submitting transaction to Stellar network...',
-  'Awaiting ledger confirmation...',
-  'Verifying payment receipt...',
-  'Confirming session booking...',
-];
-
-const LiveConfirmationStatus: React.FC<{ active: boolean }> = ({ active }) => {
-  const [stepIndex, setStepIndex] = useState(0);
-
-  useEffect(() => {
-    if (!active) { setStepIndex(0); return; }
-    const interval = setInterval(() => {
-      setStepIndex(prev => (prev < CONFIRMATION_STEPS.length - 1 ? prev + 1 : prev));
-    }, 600);
-    return () => clearInterval(interval);
-  }, [active]);
-
-  if (!active) return null;
-
-  return (
-    <div className="mt-4 space-y-1.5">
-      {CONFIRMATION_STEPS.map((step, i) => (
-        <div
-          key={step}
-          className={`flex items-center gap-2 text-xs transition-all duration-300 ${
-            i < stepIndex ? 'text-green-600 font-bold' : i === stepIndex ? 'text-stellar font-bold animate-pulse' : 'text-gray-300'
-          }`}
-        >
-          {i < stepIndex ? (
-            <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-            </svg>
-          ) : (
-            <span className={`w-3.5 h-3.5 rounded-full border-2 flex-shrink-0 ${i === stepIndex ? 'border-stellar' : 'border-gray-200'}`} />
-          )}
-          {step}
-        </div>
-      ))}
-    </div>
-  );
-};
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -65,6 +22,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, details, o
     assets,
     setStep,
     selectAsset,
+    connectWallet,
     reset
   } = usePayment(details);
 
@@ -192,6 +150,7 @@ Powered by Stellar Network
               </button>
             )}
             <h2 className="text-xl font-black text-gray-900 tracking-tight">
+              {state.step === 'connect' && 'Connect Wallet'}
               {state.step === 'method' && 'Select Asset'}
               {state.step === 'review' && 'Review Payment'}
               {currentStep === 'processing' && 'Sign Transaction'}
@@ -214,6 +173,50 @@ Powered by Stellar Network
         {/* Content Body */}
         <div className="px-8 pb-10">
           <div className="mt-4">
+            {state.step === 'connect' && (
+              <div className="space-y-6">
+                <div className="text-center space-y-4">
+                  <div className="w-16 h-16 bg-stellar rounded-2xl mx-auto flex items-center justify-center">
+                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900">Connect Your Wallet</h3>
+                    <p className="text-sm text-gray-600 mt-2">
+                      Connect your Freighter wallet to securely sign and send Stellar transactions for this payment.
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-xl border border-blue-100">
+                    <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-blue-900">Secure & Private</p>
+                      <p className="text-xs text-blue-700">Your keys never leave your device</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-3 p-4 bg-green-50 rounded-xl border border-green-100">
+                    <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
+                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-green-900">Fast Transactions</p>
+                      <p className="text-xs text-green-700">Stellar network confirms in seconds</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {state.step === 'method' && (
               <PaymentMethod 
                 assets={assets}
@@ -226,11 +229,14 @@ Powered by Stellar Network
             )}
 
             {state.step === 'review' && (
-              <PaymentBreakdown 
-                breakdown={breakdown}
-                mentorName={details.mentorName}
-                sessionTopic={details.sessionTopic}
-              />
+              <div className="space-y-4">
+                <PaymentBreakdown 
+                  breakdown={breakdown}
+                  mentorName={details.mentorName}
+                  sessionTopic={details.sessionTopic}
+                />
+                <AMLNotice amountUsd={details.amount} />
+              </div>
             )}
 
             {(currentStep === 'processing' || currentStep === 'success' || currentStep === 'error') && (
@@ -257,6 +263,15 @@ Powered by Stellar Network
 
           {/* Footer Actions */}
           <div className="mt-8">
+            {state.step === 'connect' && (
+              <button
+                onClick={connectWallet}
+                className="w-full py-4 px-6 bg-stellar text-white rounded-[1.25rem] font-black text-base shadow-xl shadow-stellar/25 hover:bg-stellar-dark hover:scale-[1.01] active:scale-95 transition-all"
+              >
+                Connect Freighter Wallet
+              </button>
+            )}
+
             {state.step === 'review' && (
               <button
                 onClick={handleProcessPayment}
@@ -292,6 +307,11 @@ Powered by Stellar Network
               </button>
             )}
 
+            {state.step === 'connect' && (
+              <p className="text-center text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-6">
+                Requires Freighter Wallet Extension
+              </p>
+            )}
             {state.step === 'method' && (
               <p className="text-center text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-6">
                 Requires a Stellar Compatible Wallet
