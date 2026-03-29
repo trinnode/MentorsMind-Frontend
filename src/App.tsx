@@ -29,6 +29,7 @@ const loadReviewForm = () => import('./components/reviews/ReviewForm');
 const loadReviewList = () => import('./components/reviews/ReviewList');
 const loadMentorPublicProfile = () => import('./pages/MentorPublicProfile');
 const loadLearnerProfile = () => import('./pages/LearnerProfile');
+const loadCreditScore = () => import('./pages/CreditScore');
 const loadMentorAnalyticsPage = () => import('./pages/MentorAnalytics');
 const loadLearnerAnalyticsPage = () => import('./pages/LearnerAnalytics');
 const loadPlatformStats = () => import('./pages/PlatformStats');
@@ -74,6 +75,7 @@ const LineChart = lazy(loadLineChart);
 const BarChart = lazy(loadBarChart);
 const PieChart = lazy(loadPieChart);
 const AreaChart = lazy(loadAreaChart);
+const CreditScore = lazy(loadCreditScore);
 const MentorAnalyticsPage = lazy(loadMentorAnalyticsPage);
 const LearnerAnalyticsPage = lazy(loadLearnerAnalyticsPage);
 const PlatformStatsPage = lazy(loadPlatformStats);
@@ -198,6 +200,19 @@ function App() {
     return () => window.removeEventListener('api-network-error', handleNetworkError);
   }, []);
 
+  const preloaders: Record<AppView, () => Promise<unknown>> = {
+    search: loadMentorSearch,
+    learner: loadLearnerOnboarding,
+    onboarding: loadMentorOnboarding,
+    profile: loadMentorProfileSetup,
+    wallet: loadMentorWallet,
+    analytics: loadAreaChart,
+    reviews: loadReviewList,
+    sessions: loadMentorSessions,
+    settings: loadSettings,
+    goals: loadLearningGoals,
+    dashboard: () => Promise.resolve(),
+    'learner-profile': loadLearnerProfile,
   const handleViewChange = (next: AppView, label: string) => {
     setView(next);
     setAnnouncement(`Navigated to ${label}`);
@@ -456,6 +471,14 @@ function App() {
             element={
               <Suspense fallback={fallback}>
                 <Governance />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/credit-score"
+            element={
+              <Suspense fallback={fallback}>
+                <CreditScore />
               </Suspense>
             }
           />
