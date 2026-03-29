@@ -1,5 +1,5 @@
 import React, { lazy, useEffect, useState, Suspense } from 'react';
-import { Routes, Route, Link } from 'react-router-dom';
+import { Routes, Route, Link, useParams } from 'react-router-dom';
 import { useOnlineStatus } from './hooks/useOnlineStatus';
 import OfflineBanner from './components/ui/OfflineBanner';
 import NetworkErrorToast from './components/ui/NetworkErrorToast';
@@ -37,6 +37,7 @@ const loadLearnerAnalyticsPage = () => import('./pages/LearnerAnalytics');
 const loadPlatformStats = () => import('./pages/PlatformStats');
 const loadPrivacyPolicy = () => import('./pages/PrivacyPolicy');
 const loadTermsOfService = () => import('./pages/TermsOfService');
+const loadSessionRoom = () => import('./pages/SessionRoom');
 
 const MentorPublicProfile = lazy(loadMentorPublicProfile);
 const LearnerProfile = lazy(() => loadLearnerProfile().then(m => ({ default: m.LearnerProfilePage })));
@@ -63,6 +64,7 @@ const LearnerAnalyticsPage = lazy(loadLearnerAnalyticsPage);
 const PlatformStatsPage = lazy(loadPlatformStats);
 const PrivacyPolicyPage = lazy(loadPrivacyPolicy);
 const TermsOfServicePage = lazy(loadTermsOfService);
+const SessionRoom = lazy(loadSessionRoom);
 
 const TERMS_ACCEPTANCE_KEY = 'mm_terms_acceptance';
 const UNSUPPORTED_COUNTRIES = new Set(['IR', 'KP', 'SY', 'CU']);
@@ -148,6 +150,18 @@ function AnalyticsDashboard() {
         />
       </div>
     </div>
+  );
+}
+
+function SessionJoinDeepLink() {
+  const { token } = useParams<{ token: string }>();
+
+  return (
+    <SessionRoom
+      sessionId={token ?? 'invite'}
+      sessionTopic="MentorMinds Session Invite"
+      mentorName="Mentor"
+    />
   );
 }
 
@@ -371,6 +385,14 @@ function App() {
             element={
               <Suspense fallback={fallback}>
                 <MentorSessions isOnline={isOnline} />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/sessions/join/:token"
+            element={
+              <Suspense fallback={fallback}>
+                <SessionJoinDeepLink />
               </Suspense>
             }
           />
