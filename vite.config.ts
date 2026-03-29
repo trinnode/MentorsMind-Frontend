@@ -19,6 +19,7 @@ const performanceBudgetPlugin = (): Plugin => ({
 });
 
 export default defineConfig({
+<<<<<<< HEAD
   plugins: [
     react(),
     performanceBudgetPlugin(),
@@ -87,11 +88,20 @@ export default defineConfig({
       },
     }),
   ],
+=======
+  plugins: [react(), performanceBudgetPlugin()],
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'react-router-dom', 'recharts'],
+  },
+>>>>>>> main
   build: {
+    target: 'es2018',
     cssCodeSplit: true,
     modulePreload: {
       polyfill: true,
     },
+    sourcemap: false,
+    treeshake: true,
     rollupOptions: {
       output: {
         manualChunks(id) {
@@ -109,5 +119,10 @@ export default defineConfig({
     },
     reportCompressedSize: true,
     chunkSizeWarningLimit: PERFORMANCE_BUDGETS.maxChunkKb,
+    minify: 'esbuild',
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
+    polyfillModulePreload: true,
   },
 });
