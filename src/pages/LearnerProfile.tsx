@@ -1,14 +1,18 @@
 import React, { useState } from 'react';
 import { useLearnerProfile } from '../hooks/useLearnerProfile';
 import { ProfileForm } from '../components/learner/ProfileForm';
-import { AchievementBadges } from '../components/learner/AchievementBadges';
+import AchievementBadges from '../components/learner/AchievementBadges';
 import { Sidebar } from '../components/dashboard/Sidebar';
 import { Navbar } from '../components/navigation/Navbar';
 import { Edit2, User, Target, Award, Settings } from 'lucide-react';
+import { useAuth } from '../hooks/useAuth';
 
 export const LearnerProfilePage: React.FC = () => {
-  const { profile, updateProfile, uploadPhoto, isLoading } = useLearnerProfile();
+  const { profile, updateProfile, uploadPhoto, isLoading: isProfileLoading } = useLearnerProfile();
+  const auth = useAuth();
   const [isEditing, setIsEditing] = useState(false);
+
+  const isLoading = isProfileLoading || auth.isLoading;
 
   if (isLoading) {
     return (
@@ -22,7 +26,7 @@ export const LearnerProfilePage: React.FC = () => {
     <div className="min-h-screen bg-gray-50 flex">
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <Navbar />
+        <Navbar auth={auth} onLogout={auth.logout} />
         <main className="flex-1 overflow-y-auto focus:outline-none">
           <div className="py-6 px-4 sm:px-6 lg:px-8">
             <div className="max-w-4xl mx-auto">
@@ -117,7 +121,7 @@ export const LearnerProfilePage: React.FC = () => {
                         <Award className="h-5 w-5 mr-2 text-blue-500" />
                         Achievements
                       </h2>
-                      <AchievementBadges />
+                      <AchievementBadges achievements={profile.achievements} />
                     </section>
                   </div>
 
