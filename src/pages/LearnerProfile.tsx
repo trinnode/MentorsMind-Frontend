@@ -4,6 +4,8 @@ import { ProfileForm } from '../components/learner/ProfileForm';
 import AchievementBadges from '../components/learner/AchievementBadges';
 import { Sidebar } from '../components/dashboard/Sidebar';
 import { Navbar } from '../components/navigation/Navbar';
+import { EndorsementSection } from '../components/profile/EndorsementSection';
+import { useEndorsements } from '../hooks/useEndorsements';
 import { Edit2, User, Target, Award, Settings } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 
@@ -11,6 +13,7 @@ export const LearnerProfilePage: React.FC = () => {
   const { profile, updateProfile, uploadPhoto, isLoading: isProfileLoading } = useLearnerProfile();
   const auth = useAuth();
   const [isEditing, setIsEditing] = useState(false);
+  const { endorsements, pendingSkill, requestEndorsement, cancelRequest, toggleEndorsement } = useEndorsements(true);
 
   const isLoading = isProfileLoading || auth.isLoading;
 
@@ -96,6 +99,16 @@ export const LearnerProfilePage: React.FC = () => {
                         <p>{profile.introduction}</p>
                       </div>
                     </section>
+
+                    <EndorsementSection
+                      name={profile.fullName}
+                      endorsements={endorsements}
+                      hasCompletedSession={true}
+                      pendingSkill={pendingSkill}
+                      onRequestEndorsement={requestEndorsement}
+                      onToggleEndorsement={toggleEndorsement}
+                      onCancelRequest={cancelRequest}
+                    />
 
                     {/* Learning Goals */}
                     <section className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
