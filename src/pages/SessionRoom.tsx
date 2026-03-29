@@ -1,17 +1,19 @@
-import React, { useState } from 'react';
-import { useVideoSession } from '../hooks/useVideoSession';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import RecordingConsent from '../components/session/RecordingConsent';
 import RecordingIndicator from '../components/session/RecordingIndicator';
-import VideoPlayer from '../components/session/VideoPlayer';
+import ConnectionQuality from '../components/session/ConnectionQuality';
+import VideoControls from '../components/session/VideoControls';
+import VideoGrid from '../components/session/VideoGrid';
 import SessionTimer from '../components/session/SessionTimer';
-import SessionControls from '../components/session/SessionControls';
 import { useRecording } from '../hooks/useRecording';
+import { useWebRTC } from '../hooks/useWebRTC';
 
 interface SessionRoomProps {
   sessionId: string;
   meetingLink?: string;
   sessionTopic?: string;
   mentorName?: string;
+  viewerRole?: 'mentor' | 'learner';
 }
 
 const SessionRoom: React.FC<SessionRoomProps> = ({
@@ -19,24 +21,32 @@ const SessionRoom: React.FC<SessionRoomProps> = ({
   meetingLink,
   sessionTopic = 'Mentoring Session',
   mentorName = 'Mentor',
+  viewerRole = 'learner',
 }) => {
   const {
     isConnected,
     isConnecting,
+    isReconnecting,
     error,
-    participants,
+    localStream,
+    remoteStream,
+    screenStream,
     isScreenSharing,
     isMuted,
-    isVideoOff,
+    isCameraOff,
+    isAudioOnly,
     sessionDuration,
+    connectionQuality,
+    rttMs,
+    screenShareSupported,
     connect,
     disconnect,
     toggleMute,
-    toggleVideo,
+    toggleCamera,
     toggleScreenShare,
     endSession,
     retry,
-  } = useVideoSession({
+  } = useWebRTC({
     sessionId,
     meetingLink,
     onSessionEnd: () => {
@@ -49,8 +59,19 @@ const SessionRoom: React.FC<SessionRoomProps> = ({
 
   const [showNotes, setShowNotes] = useState(false);
   const [notes, setNotes] = useState('');
-  const remoteParticipant = participants.find((participant) => participant.isHost) || participants.find((participant) => participant.name !== 'You');
-  const remoteRole = remoteParticipant?.isHost ? 'mentor' : 'learner';
+  const [isPictureInPicture, setIsPictureInPicture] = useState(false);
+  const primaryVideoRef = useRef<HTMLVideoElement>(null);
+  const pipSupported = useMemo(
+    () =>
+      typeof document !== 'undefined' &&
+      document.pictureInPictureEnabled &&
+      typeof HTMLVideoElement !== 'undefined' &&
+      'requestPictureInPicture' in HTMLVideoElement.prototype,
+    [],
+  );
+
+  const remotePartyRole = viewerRole === 'mentor' ? 'learner' : 'mentor';
+  const remotePartyName = viewerRole === 'mentor' ? 'Learner' : mentorName;
   const {
     isRecordingActive,
     canRequestRecording,
@@ -70,10 +91,46 @@ const SessionRoom: React.FC<SessionRoomProps> = ({
     sessionId,
     sessionTopic,
     isSessionConnected: isConnected,
-    localPartyRole: 'learner',
-    remotePartyRole: remoteRole,
-    remotePartyName: remoteParticipant?.name || mentorName,
+    localPartyRole: viewerRole,
+    remotePartyRole,
+    remotePartyName,
   });
+
+  useEffect(() => {
+    const video = primaryVideoRef.current;
+
+    if (!video) {
+      return;
+    }
+
+    const handleEnter = () => setIsPictureInPicture(true);
+    const handleLeave = () => setIsPictureInPicture(false);
+
+    video.addEventListener('enterpictureinpicture', handleEnter);
+    video.addEventListener('leavepictureinpicture', handleLeave);
+
+    return () => {
+      video.removeEventListener('enterpictureinpicture', handleEnter);
+      video.removeEventListener('leavepictureinpicture', handleLeave);
+    };
+  }, [remoteStream, isScreenSharing]);
+
+  const togglePictureInPicture = async () => {
+    if (!pipSupported || !primaryVideoRef.current) {
+      return;
+    }
+
+    if (document.pictureInPictureElement) {
+      await document.exitPictureInPicture();
+      setIsPictureInPicture(false);
+      return;
+    }
+
+    await primaryVideoRef.current.requestPictureInPicture();
+    setIsPictureInPicture(true);
+  };
+
+  const remoteVideoOff = !isScreenSharing && (isCameraOff || isAudioOnly);
 
   if (error) {
     return (
@@ -88,7 +145,9 @@ const SessionRoom: React.FC<SessionRoomProps> = ({
           <p className="text-gray-500 mb-6">{error}</p>
           <div className="flex gap-3 justify-center">
             <button
-              onClick={retry}
+              onClick={() => {
+                void retry();
+              }}
               className="px-6 py-3 bg-stellar text-white font-bold rounded-xl hover:bg-stellar-dark transition-all"
             >
               Retry
@@ -113,7 +172,7 @@ const SessionRoom: React.FC<SessionRoomProps> = ({
             <div className="w-8 h-8 border-4 border-stellar border-t-transparent rounded-full animate-spin" />
           </div>
           <h2 className="text-xl font-bold text-gray-900 mb-2">Connecting to session...</h2>
-          <p className="text-gray-500">Please wait while we connect you to the video call.</p>
+          <p className="text-gray-500">Please wait while we connect you to the WebRTC session.</p>
         </div>
       </div>
     );
@@ -130,7 +189,7 @@ const SessionRoom: React.FC<SessionRoomProps> = ({
           </div>
           <h2 className="text-xl font-bold text-gray-900 mb-2">Ready to join?</h2>
           <p className="text-gray-500 mb-6">
-            You're about to join a session with {mentorName}.
+            You&apos;re about to join a session with {mentorName}.
           </p>
           {recordingArchive && consentMetadata && (
             <div className="mb-6 rounded-2xl border border-gray-200 bg-gray-50 p-4 text-left">
@@ -153,7 +212,9 @@ const SessionRoom: React.FC<SessionRoomProps> = ({
             </div>
           )}
           <button
-            onClick={connect}
+            onClick={() => {
+              void connect();
+            }}
             className="w-full px-6 py-3 bg-stellar text-white font-bold rounded-xl hover:bg-stellar-dark transition-all"
           >
             Join Session
@@ -165,8 +226,7 @@ const SessionRoom: React.FC<SessionRoomProps> = ({
 
   return (
     <div className="min-h-screen bg-gray-900 flex flex-col">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 bg-gray-900/50">
+      <div className="flex flex-wrap items-center justify-between gap-4 bg-gray-900/50 p-4">
         <div className="flex items-center gap-4">
           <button
             onClick={disconnect}
@@ -183,7 +243,8 @@ const SessionRoom: React.FC<SessionRoomProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center justify-end gap-3">
+          <ConnectionQuality quality={connectionQuality} rttMs={rttMs} />
           <RecordingIndicator
             isRecording={isRecordingActive}
             retentionNotice={privacyNotice}
@@ -193,10 +254,15 @@ const SessionRoom: React.FC<SessionRoomProps> = ({
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex gap-4 p-4">
-        {/* Video Area */}
-        <div className="flex-1 flex flex-col gap-4">
+      <div className="flex flex-1 flex-col gap-4 p-4 lg:flex-row">
+        <div className="flex flex-1 flex-col gap-4">
+          {(isAudioOnly || isScreenSharing) && (
+            <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/85">
+              {isAudioOnly && <span>Audio-only fallback is active because video capture failed.</span>}
+              {isScreenSharing && <span>Screen share is active and mirrored into the peer connection.</span>}
+            </div>
+          )}
+
           <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
             <div className="rounded-2xl bg-white/10 p-5 text-left text-white">
               <div className="flex flex-wrap items-center justify-between gap-3">
@@ -233,17 +299,25 @@ const SessionRoom: React.FC<SessionRoomProps> = ({
             </div>
           </div>
 
-          <div className="flex-1 min-h-[420px]">
-            <VideoPlayer
-              participants={participants}
+          <div className="flex-1">
+            <VideoGrid
+              localStream={localStream}
+              remoteStream={remoteStream}
+              screenStream={screenStream}
+              isMuted={isMuted}
+              isCameraOff={isCameraOff}
+              isRemoteVideoOff={remoteVideoOff}
               isScreenSharing={isScreenSharing}
+              isAudioOnly={isAudioOnly}
+              isReconnecting={isReconnecting}
+              remoteName={mentorName}
+              primaryVideoRef={primaryVideoRef}
             />
           </div>
         </div>
 
-        {/* Notes Panel */}
         {showNotes && (
-          <div className="w-80 bg-white rounded-2xl p-4 flex flex-col">
+          <div className="flex w-full flex-col rounded-2xl bg-white p-4 lg:w-80">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-bold text-gray-900">Session Notes</h3>
               <button
@@ -259,13 +333,12 @@ const SessionRoom: React.FC<SessionRoomProps> = ({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Take notes during the session..."
-              className="flex-1 w-full p-3 border border-gray-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-stellar/20 focus:border-stellar transition-all text-sm"
+              className="flex-1 w-full p-3 border border-gray-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-stellar/20 focus:border-stellar transition-all text-sm min-h-48"
             />
           </div>
         )}
       </div>
 
-      {/* Controls */}
       <div className="p-4 flex justify-center">
         <div className="flex flex-wrap items-center justify-center gap-3">
           <button
@@ -310,14 +383,25 @@ const SessionRoom: React.FC<SessionRoomProps> = ({
             </button>
           )}
 
-          <SessionControls
+          <VideoControls
             isMuted={isMuted}
-            isVideoOff={isVideoOff}
+            isCameraOff={isCameraOff}
             isScreenSharing={isScreenSharing}
+            isAudioOnly={isAudioOnly}
+            isPictureInPicture={isPictureInPicture}
+            pipSupported={pipSupported && !remoteVideoOff}
             onToggleMute={toggleMute}
-            onToggleVideo={toggleVideo}
-            onToggleScreenShare={toggleScreenShare}
+            onToggleCamera={() => {
+              void toggleCamera();
+            }}
+            onToggleScreenShare={() => {
+              void toggleScreenShare();
+            }}
+            onTogglePictureInPicture={() => {
+              void togglePictureInPicture();
+            }}
             onEndSession={endSession}
+            disabled={!screenShareSupported && isScreenSharing}
           />
         </div>
       </div>
