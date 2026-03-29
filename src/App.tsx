@@ -38,6 +38,7 @@ const loadPlatformStats = () => import('./pages/PlatformStats');
 const loadPrivacyPolicy = () => import('./pages/PrivacyPolicy');
 const loadTermsOfService = () => import('./pages/TermsOfService');
 const loadISAMarketplace = () => import('./pages/ISAMarketplace');
+const loadPortfolio = () => import('./pages/Portfolio');
 
 const MentorPublicProfile = lazy(loadMentorPublicProfile);
 const LearnerProfile = lazy(() => loadLearnerProfile().then(m => ({ default: m.LearnerProfilePage })));
@@ -65,6 +66,7 @@ const PlatformStatsPage = lazy(loadPlatformStats);
 const PrivacyPolicyPage = lazy(loadPrivacyPolicy);
 const TermsOfServicePage = lazy(loadTermsOfService);
 const ISAMarketplacePage = lazy(loadISAMarketplace);
+const Portfolio = lazy(loadPortfolio);
 
 const TERMS_ACCEPTANCE_KEY = 'mm_terms_acceptance';
 const UNSUPPORTED_COUNTRIES = new Set(['IR', 'KP', 'SY', 'CU']);
@@ -429,6 +431,14 @@ function App() {
             element={
               <Suspense fallback={fallback}>
                 <ISAMarketplacePage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/portfolio"
+            element={
+              <Suspense fallback={fallback}>
+                <Portfolio />
               </Suspense>
             }
           />
