@@ -155,6 +155,13 @@ const App: React.FC = () => {
     setIsTermsAccepted(true);
   };
 function AnalyticsDashboard() {
+  // Local fallback for individual widgets so one broken chart doesn't crash the whole page
+  const WidgetErrorFallback = (
+    <div className="flex items-center justify-center h-64 bg-red-50 border border-red-100 rounded-2xl text-sm text-red-600 font-medium">
+      Unable to load chart data.
+    </div>
+  );
+
   return (
     <div className="space-y-6 pb-10">
       <div>
