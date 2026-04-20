@@ -1,65 +1,54 @@
-import { useState } from 'react'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
+import ProtectedRoute from './components/navigation/ProtectedRoute';
+import DashboardLayout from './layouts/DashboardLayout';
+import SkipNavigation from './components/a11y/SkipNavigation';
 
-function App() {
-  const [count, setCount] = useState(0)
+// Pages
+import LandingPage from './pages/LandingPage';
+import MentorSearch from './pages/MentorSearch';
+import MentorDashboard from './pages/MentorDashboard';
+import MentorProfile from './pages/MentorProfile';
+import MentorWallet from './pages/MentorWallet';
+import MentorOnboarding from './pages/MentorOnboarding';
+import LearnerDashboard from './pages/LearnerDashboard';
+import LearnerProfile from './pages/LearnerProfile';
+import LearnerOnboarding from './pages/LearnerOnboarding';
+import SessionHistory from './pages/SessionHistory';
+import PaymentHistory from './pages/PaymentHistory';
 
+export default function App() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="max-w-4xl mx-auto px-4 py-16 text-center">
-        {/* Logo/Header */}
-        <div className="mb-8">
-          <h1 className="text-5xl font-bold text-gray-900 mb-4">
-            MentorMinds <span className="text-stellar">Stellar</span>
-          </h1>
-          <p className="text-xl text-gray-600">
-            Blockchain-Powered Mentoring Platform
-          </p>
-        </div>
+    <AuthProvider>
+      <BrowserRouter>
+        <SkipNavigation />
+        <main id="main-content">
+          <Routes>
+            {/* Public */}
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/mentors" element={<MentorSearch />} />
+            <Route path="/onboarding/mentor" element={<MentorOnboarding />} />
+            <Route path="/onboarding/learner" element={<LearnerOnboarding />} />
 
-        {/* Card */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
-          <div className="mb-6">
-            <button
-              onClick={() => setCount((count) => count + 1)}
-              className="px-8 py-3 bg-stellar hover:bg-stellar-dark text-white font-semibold rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
-            >
-              Count is {count}
-            </button>
-          </div>
-          
-          <p className="text-gray-600 mb-4">
-            Edit <code className="bg-gray-100 px-2 py-1 rounded text-sm font-mono">src/App.tsx</code> and save to test HMR
-          </p>
-        </div>
+            {/* Mentor routes */}
+            <Route path="/mentor" element={<ProtectedRoute><DashboardLayout><Navigate to="/mentor/dashboard" replace /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/mentor/dashboard" element={<ProtectedRoute><DashboardLayout><MentorDashboard /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/mentor/profile" element={<ProtectedRoute><DashboardLayout><MentorProfile /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/mentor/wallet" element={<ProtectedRoute><DashboardLayout><MentorWallet /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/mentor/sessions" element={<ProtectedRoute><DashboardLayout><SessionHistory /></DashboardLayout></ProtectedRoute>} />
 
-        {/* Features */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-lg p-6 shadow-md">
-            <div className="text-3xl mb-3">⚡</div>
-            <h3 className="font-semibold text-lg mb-2">Instant Payments</h3>
-            <p className="text-gray-600 text-sm">Powered by Stellar blockchain</p>
-          </div>
-          
-          <div className="bg-white rounded-lg p-6 shadow-md">
-            <div className="text-3xl mb-3">🔒</div>
-            <h3 className="font-semibold text-lg mb-2">Secure Escrow</h3>
-            <p className="text-gray-600 text-sm">Smart contract protection</p>
-          </div>
-          
-          <div className="bg-white rounded-lg p-6 shadow-md">
-            <div className="text-3xl mb-3">🌍</div>
-            <h3 className="font-semibold text-lg mb-2">Global Access</h3>
-            <p className="text-gray-600 text-sm">Connect mentors worldwide</p>
-          </div>
-        </div>
+            {/* Learner routes */}
+            <Route path="/learner" element={<ProtectedRoute><DashboardLayout><Navigate to="/learner/dashboard" replace /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/learner/dashboard" element={<ProtectedRoute><DashboardLayout><LearnerDashboard /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/learner/profile" element={<ProtectedRoute><DashboardLayout><LearnerProfile /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/learner/sessions" element={<ProtectedRoute><DashboardLayout><SessionHistory /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/learner/payments" element={<ProtectedRoute><DashboardLayout><PaymentHistory /></DashboardLayout></ProtectedRoute>} />
 
-        {/* Footer */}
-        <p className="text-gray-500 text-sm">
-          Click on the Vite and React logos to learn more
-        </p>
-      </div>
-    </div>
-  )
+            {/* Fallback */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </main>
+      </BrowserRouter>
+    </AuthProvider>
+  );
 }
-
-export default App

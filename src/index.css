@@ -7,11 +7,3 @@
     @apply min-h-screen bg-gray-50 text-gray-900 antialiased;
   }
 }
-
-@layer components {
-  /* Custom component styles can be added here if needed */
-}
-
-@layer utilities {
-  /* Custom utility classes can be added here if needed */
-}
