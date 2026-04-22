@@ -6,7 +6,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string, role: 'mentor' | 'learner') => Promise<void>;
+  register: (firstName: string, lastName: string, email: string, password: string, role: 'mentor' | 'learner') => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -29,25 +29,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Restore session from storage, then verify with backend
-    const stored = localStorage.getItem('mm_user');
-    const token = localStorage.getItem('mm_token');
-    if (stored && token) {
-      setUser(JSON.parse(stored));
-      // Silently refresh user data from backend
-      authService.getMe()
-        .then((freshUser) => {
-          setUser(freshUser);
-          localStorage.setItem('mm_user', JSON.stringify(freshUser));
-        })
-        .catch(() => {
-          clearSession();
-          setUser(null);
-        })
-        .finally(() => setLoading(false));
-    } else {
-      setLoading(false);
-    }
+    // Restore session from storage, then verify with backend.
+    // Using async/await with try/finally guarantees setLoading(false) always runs,
+    // even if JSON.parse throws synchronously or the network call fails unexpectedly.
+    const restoreSession = async () => {
+      try {
+        const stored = localStorage.getItem('mm_user');
+        const token = localStorage.getItem('mm_token');
+        if (stored && token) {
+          // Optimistically restore user from storage while we verify with backend
+          setUser(JSON.parse(stored));
+          try {
+            const freshUser = await authService.getMe();
+            setUser(freshUser);
+            localStorage.setItem('mm_user', JSON.stringify(freshUser));
+          } catch {
+            // Token expired or network failure — clear everything and show login
+            clearSession();
+            setUser(null);
+          }
+        }
+      } finally {
+        // Always dismiss the loading screen regardless of outcome
+        setLoading(false);
+      }
+    };
+
+    restoreSession();
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -56,8 +64,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(user);
   };
 
-  const register = async (name: string, email: string, password: string, role: 'mentor' | 'learner') => {
-    const { user, token, refreshToken } = await authService.register(name, email, password, role);
+  const register = async (firstName: string, lastName: string, email: string, password: string, role: 'mentor' | 'learner') => {
+    const { user, token, refreshToken } = await authService.register(firstName, lastName, email, password, role);
     persistSession(user, token, refreshToken);
     setUser(user);
   };
