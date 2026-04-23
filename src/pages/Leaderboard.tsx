@@ -1,81 +1,117 @@
-import React, { useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Trophy } from 'lucide-react';
-import { DashboardLayout } from '../layouts/DashboardLayout';
-import { useDashboard } from '../hooks/useDashboard';
-import { useStreak } from '../hooks/useStreak';
+import { Trophy, Medal } from 'lucide-react';
 
-const LeaderboardContent: React.FC = () => {
-  const { setRole, setLoading } = useDashboard();
-  const { leaderboardTop10 } = useStreak();
+interface LeaderboardEntry {
+  rank: number;
+  name: string;
+  streak: number;
+  mntEarned: number;
+  avatar: string;
+}
 
-  useEffect(() => {
-    setRole('learner');
-    setLoading(true);
-    const t = setTimeout(() => setLoading(false), 400);
-    return () => clearTimeout(t);
-  }, [setRole, setLoading]);
+const mockLeaderboard: LeaderboardEntry[] = [
+  { rank: 1, name: 'Alex Chen', streak: 42, mntEarned: 2100, avatar: '👨‍💻' },
+  { rank: 2, name: 'Sarah Johnson', streak: 38, mntEarned: 1900, avatar: '👩‍💼' },
+  { rank: 3, name: 'Marcus Williams', streak: 35, mntEarned: 1750, avatar: '👨‍🎓' },
+  { rank: 4, name: 'Emma Davis', streak: 32, mntEarned: 1600, avatar: '👩‍🔬' },
+  { rank: 5, name: 'James Brown', streak: 28, mntEarned: 1400, avatar: '👨‍🏫' },
+  { rank: 6, name: 'Lisa Anderson', streak: 25, mntEarned: 1250, avatar: '👩‍💻' },
+  { rank: 7, name: 'David Miller', streak: 22, mntEarned: 1100, avatar: '👨‍🎨' },
+  { rank: 8, name: 'Jessica Taylor', streak: 20, mntEarned: 1000, avatar: '👩‍🎓' },
+  { rank: 9, name: 'Robert Garcia', streak: 18, mntEarned: 900, avatar: '👨‍💼' },
+  { rank: 10, name: 'Michelle Lee', streak: 15, mntEarned: 750, avatar: '👩‍🏫' },
+];
+
+export default function Leaderboard() {
+  const getMedalIcon = (rank: number) => {
+    switch (rank) {
+      case 1:
+        return <Trophy className="w-5 h-5 text-yellow-500" />;
+      case 2:
+        return <Medal className="w-5 h-5 text-gray-400" />;
+      case 3:
+        return <Medal className="w-5 h-5 text-orange-600" />;
+      default:
+        return <span className="text-lg font-bold text-gray-400">#{rank}</span>;
+    }
+  };
 
   return (
-    <div className="p-6 space-y-8 max-w-3xl">
-      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 dark:border-gray-800 pb-6">
-        <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 dark:bg-amber-900/30 text-amber-600">
-            <Trophy className="w-6 h-6" aria-hidden />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Leaderboard</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Top 10 learners by current week streak</p>
-          </div>
-        </div>
-        <Link
-          to="/dashboard"
-          className="inline-flex items-center justify-center rounded-xl border border-gray-200 dark:border-gray-700 px-4 py-2 text-sm font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800"
-        >
-          Back to dashboard
-        </Link>
-      </header>
+    <div className="space-y-6">
+      <div className="flex items-center gap-3 mb-6">
+        <Trophy className="w-8 h-8 text-yellow-500" />
+        <h1 className="text-3xl font-bold text-gray-900">Leaderboard</h1>
+      </div>
 
-      <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
-        <table className="w-full text-left text-sm">
-          <thead>
-            <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50/80 dark:bg-gray-800/50">
-              <th className="px-4 py-3 font-bold text-gray-600 dark:text-gray-300">Rank</th>
-              <th className="px-4 py-3 font-bold text-gray-600 dark:text-gray-300">Learner</th>
-              <th className="px-4 py-3 font-bold text-gray-600 dark:text-gray-300 text-right">Week streak</th>
-            </tr>
-          </thead>
-          <tbody>
-            {leaderboardTop10.map((row) => (
-              <tr
-                key={row.id}
-                className={`border-b border-gray-50 dark:border-gray-800 last:border-0 ${
-                  row.isCurrentUser ? 'bg-blue-50/60 dark:bg-blue-950/20' : ''
-                }`}
-              >
-                <td className="px-4 py-3 font-bold tabular-nums text-gray-900 dark:text-white">{row.rank}</td>
-                <td className="px-4 py-3 font-semibold text-gray-800 dark:text-gray-100">
-                  {row.name}
-                  {row.isCurrentUser ? (
-                    <span className="ml-2 text-xs font-bold uppercase text-blue-600 dark:text-blue-400">You</span>
-                  ) : null}
-                </td>
-                <td className="px-4 py-3 text-right font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
-                  {row.streakWeeks} wk
-                </td>
+      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl p-6 text-white mb-6">
+        <p className="text-sm opacity-90">Top learners by current streak</p>
+        <p className="text-lg font-semibold mt-1">Compete and earn MNT rewards</p>
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="bg-gray-50 border-b border-gray-200">
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Rank</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Learner</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Current Streak</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">MNT Earned</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {mockLeaderboard.map((entry, index) => (
+                <tr
+                  key={entry.rank}
+                  className={`border-b border-gray-100 transition-colors ${
+                    index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
+                  } hover:bg-indigo-50`}
+                >
+                  <td className="px-6 py-4">
+                    <div className="flex items-center justify-center w-8 h-8">
+                      {getMedalIcon(entry.rank)}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{entry.avatar}</span>
+                      <span className="font-medium text-gray-900">{entry.name}</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg font-bold text-orange-600">{entry.streak}</span>
+                      <span className="text-orange-500">🔥</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-indigo-600">{entry.mntEarned}</span>
+                      <span className="text-sm text-gray-500">MNT</span>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl border border-yellow-200 p-4">
+          <p className="text-sm text-gray-600 mb-1">🥇 Top Streak</p>
+          <p className="text-2xl font-bold text-orange-600">{mockLeaderboard[0].streak} weeks</p>
+        </div>
+        <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl border border-indigo-200 p-4">
+          <p className="text-sm text-gray-600 mb-1">💰 Total MNT Distributed</p>
+          <p className="text-2xl font-bold text-indigo-600">
+            {mockLeaderboard.reduce((sum, entry) => sum + entry.mntEarned, 0)}
+          </p>
+        </div>
+        <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-200 p-4">
+          <p className="text-sm text-gray-600 mb-1">👥 Active Learners</p>
+          <p className="text-2xl font-bold text-green-600">{mockLeaderboard.length}</p>
+        </div>
       </div>
     </div>
   );
-};
-
-const Leaderboard: React.FC = () => (
-  <DashboardLayout>
-    <LeaderboardContent />
-  </DashboardLayout>
-);
-
-export default Leaderboard;
+}

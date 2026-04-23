@@ -19,6 +19,7 @@ import LearnerOnboarding from './pages/LearnerOnboarding';
 import SessionHistory from './pages/SessionHistory';
 import PaymentHistory from './pages/PaymentHistory';
 import CheckoutPage from './pages/CheckoutPage';
+import Leaderboard from './pages/Leaderboard';
 
 export default function App() {
   return (
@@ -49,6 +50,7 @@ export default function App() {
             <Route path="/learner/profile" element={<ProtectedRoute><DashboardLayout><LearnerProfile /></DashboardLayout></ProtectedRoute>} />
             <Route path="/learner/sessions" element={<ProtectedRoute><DashboardLayout><SessionHistory /></DashboardLayout></ProtectedRoute>} />
             <Route path="/learner/payments" element={<ProtectedRoute><DashboardLayout><PaymentHistory /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/learner/leaderboard" element={<ProtectedRoute><DashboardLayout><Leaderboard /></DashboardLayout></ProtectedRoute>} />
             <Route path="/learner/settings" element={<ProtectedRoute><DashboardLayout><Settings /></DashboardLayout></ProtectedRoute>} />
 
             {/* Checkout */}

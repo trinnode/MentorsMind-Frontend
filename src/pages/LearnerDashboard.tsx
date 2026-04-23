@@ -2,6 +2,9 @@ import MetricCard from '../components/charts/MetricCard';
 import LearningProgress from '../components/learner/LearningProgress';
 import GoalSetting from '../components/learner/GoalSetting';
 import SessionList from '../components/mentor/SessionList';
+import StreakWidget from '../components/learner/StreakWidget';
+import StreakCalendar from '../components/learner/StreakCalendar';
+import MilestoneProgress from '../components/learner/MilestoneProgress';
 
 export default function LearnerDashboard() {
   return (
@@ -13,6 +16,14 @@ export default function LearnerDashboard() {
         <MetricCard title="Goals Achieved" value={3} icon="🎯" />
         <MetricCard title="Avg Session Rating" value="4.8" icon="⭐" />
       </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <StreakWidget />
+        <MilestoneProgress />
+      </div>
+
+      <StreakCalendar />
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
           <h2 className="font-semibold text-gray-900">Learning Progress</h2>

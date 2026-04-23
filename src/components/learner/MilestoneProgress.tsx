@@ -1,50 +1,52 @@
-import React from 'react';
-import { Coins } from 'lucide-react';
+import { Gift } from 'lucide-react';
+import { useStreak } from '../../hooks/useStreak';
+import Button from '../ui/Button';
 
-export interface MilestoneProgressProps {
-  currentSessions: number;
-  targetSessions: number;
-  bonusMnt: number;
-}
+export default function MilestoneProgress() {
+  const { streak, claimRewards } = useStreak();
 
-const MilestoneProgress: React.FC<MilestoneProgressProps> = ({
-  currentSessions,
-  targetSessions,
-  bonusMnt,
-}) => {
-  const pct = targetSessions > 0 ? Math.min(100, Math.round((currentSessions / targetSessions) * 100)) : 0;
+  const totalSessions = 10;
+  const completedSessions = totalSessions - streak.sessionsToMilestone;
+  const progressPercentage = (completedSessions / totalSessions) * 100;
 
   return (
-    <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm">
-      <div className="flex items-center gap-2 mb-2">
-        <Coins className="w-5 h-5 text-amber-500 shrink-0" aria-hidden />
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white">Streak milestone</h3>
+    <div className="bg-white rounded-xl border border-gray-200 p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold text-gray-900">Milestone Progress</h3>
+        <div className="flex items-center gap-2 bg-yellow-50 px-3 py-1 rounded-full">
+          <Gift className="w-4 h-4 text-yellow-600" />
+          <span className="text-sm font-semibold text-yellow-700">{streak.milestoneReward} MNT</span>
+        </div>
       </div>
-      <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">
-        {currentSessions}/{targetSessions} sessions to earn {bonusMnt} MNT bonus
-      </p>
-      <div
-        className="mt-4 h-3 w-full rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden"
-        role="progressbar"
-        aria-valuenow={currentSessions}
-        aria-valuemin={0}
-        aria-valuemax={targetSessions}
-        aria-label={`Milestone progress ${currentSessions} of ${targetSessions} sessions`}
-      >
-        <div
-          className="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-500 transition-all duration-500"
-          style={{ width: `${pct}%` }}
-        />
+
+      <div className="mb-4">
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-sm text-gray-600">
+            {completedSessions}/{totalSessions} sessions
+          </span>
+          <span className="text-sm font-semibold text-gray-900">{Math.round(progressPercentage)}%</span>
+        </div>
+        <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+          <div
+            className="bg-gradient-to-r from-indigo-500 to-purple-600 h-full rounded-full transition-all duration-500"
+            style={{ width: `${progressPercentage}%` }}
+          />
+        </div>
       </div>
-      <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-        {(() => {
-          const left = Math.max(0, targetSessions - currentSessions);
-          if (left === 0) return 'Bonus unlocked on your next qualifying session.';
-          return `Finish ${left} more session${left === 1 ? '' : 's'} to unlock the bonus.`;
-        })()}
+
+      <p className="text-sm text-gray-600 mb-4">
+        {streak.sessionsToMilestone} more session{streak.sessionsToMilestone !== 1 ? 's' : ''} to earn{' '}
+        <span className="font-semibold text-indigo-600">{streak.milestoneReward} MNT bonus</span>
       </p>
+
+      {streak.mntRewardsEarned > 0 && (
+        <Button
+          onClick={claimRewards}
+          className="w-full bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-gray-900 font-semibold"
+        >
+          Claim {streak.mntRewardsEarned} MNT Rewards
+        </Button>
+      )}
     </div>
   );
-};
-
-export default MilestoneProgress;
+}
