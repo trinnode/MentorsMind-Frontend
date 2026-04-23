@@ -18,8 +18,7 @@ import LearnerProfile from './pages/LearnerProfile';
 import LearnerOnboarding from './pages/LearnerOnboarding';
 import SessionHistory from './pages/SessionHistory';
 import PaymentHistory from './pages/PaymentHistory';
-import MFAChallengeScreen from './pages/MFAChallengeScreen';
-import Settings from './pages/Settings';
+import CheckoutPage from './pages/CheckoutPage';
 
 export default function App() {
   return (
@@ -52,12 +51,14 @@ export default function App() {
             <Route path="/learner/payments" element={<ProtectedRoute><DashboardLayout><PaymentHistory /></DashboardLayout></ProtectedRoute>} />
             <Route path="/learner/settings" element={<ProtectedRoute><DashboardLayout><Settings /></DashboardLayout></ProtectedRoute>} />
 
-              {/* Fallback */}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </main>
-        </BrowserRouter>
-      </AuthProvider>
-    </ThemeProvider>
+            {/* Checkout */}
+            <Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
+
+            {/* Fallback */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </main>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
